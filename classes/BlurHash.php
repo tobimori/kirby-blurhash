@@ -8,15 +8,11 @@ use kornrunner\Blurhash\Blurhash as BHEncoder;
 class BlurHash
 {
   /**
-   * Blurs an image based on the blurhash algorithm, returns a data URI with an SVG filter.
-   * 
-   * @param File $file 
-   * @param float|null $ratio 
-   * @return string 
+   * Blurs an image based on the BlurHash algorithm, returns a data URI with an SVG filter.
    */
-  public static function blur(File $file, float $ratio = null): string
+  public static function blur(File $file, float|null $ratio = null): string
   {
-    $ratio = ($ratio ?? $file->ratio());
+    $ratio ??= $file->ratio();
 
     $blurhash = self::encode($file, $ratio); // Encode image with BlurHash Algorithm
     [$width, $height] = self::calcWidthHeight(option('tobimori.blurhash.decodeTarget'), $ratio); // Get target width and height for decoding
@@ -26,19 +22,14 @@ class BlurHash
   }
 
   /**
-   * Returns the blurhash for a Kirby file object.
-   * 
-   * @param File $file 
-   * @param float|null $ratio 
-   * @return string 
+   * Returns the BlurHash for a Kirby file object.
    */
-  public static function encode(File $file, float $ratio = null): string
+  public static function encode(File $file, float|null $ratio = null): string
   {
     $kirby = kirby();
 
     $id = $file->uuid() ?? $file->id();
-    $ratio = $ratio ?? $file->ratio();
-
+    $ratio ??= $file->ratio();
     $cache = $kirby->cache('tobimori.blurhash.encode');
 
     if (($cacheData = $cache->get($id)) !== null) {
@@ -87,11 +78,6 @@ class BlurHash
 
   /**
    * Decodes a BlurHash string to a binary image string.
-   * 
-   * @param string $blurhash 
-   * @param int $width 
-   * @param int $height 
-   * @return string 
    */
   public static function decode(string $blurhash, int $width, int $height): string
   {
@@ -124,9 +110,6 @@ class BlurHash
   /**
    * Returns an optimized URI-encoded string of an SVG for using in a src attribute.
    * Based on https://github.com/johannschopplich/kirby-blurry-placeholder/blob/main/BlurryPlaceholder.php#L65
-   * 
-   * @param string $data
-   * @return string
    */
   private static function svgToUri(string $data): string
   {
@@ -151,11 +134,6 @@ class BlurHash
   /**
    * Applies SVG filter and base64-encoding to binary image.
    * Based on https://github.com/johannschopplich/kirby-blurry-placeholder/blob/main/BlurryPlaceholder.php#L10
-   * 
-   * @param string $image
-   * @param int $width
-   * @param int $height
-   * @return string
    */
   private static function svgFilter(string $image, int $width, int $height): string
   {
@@ -182,11 +160,6 @@ class BlurHash
 
   /**
    * Returns a decoded BlurHash as a URI-encoded SVG with blur filter applied.
-   * 
-   * @param string $image
-   * @param int $width
-   * @param int $height
-   * @return string
    */
   public static function uri(string $image, int $width, int $height): string
   {
@@ -197,12 +170,8 @@ class BlurHash
   }
 
   /**
-   * Returns the width and height for a given ratio, based on a target entity count.    
+   * Returns the width and height for a given ratio, based on a target entity count.
    * Aims for a size of ~x entities (width * height = ~x)
-   * 
-   * @param int $target
-   * @param float $ratio
-   * @return array
    */
   private static function calcWidthHeight(int $target, float $ratio): array
   {
