@@ -7,12 +7,18 @@ use tobimori\BlurHash;
 
 App::plugin('tobimori/blurhash', [
   'fileMethods' => [
-    'blurhash' => fn (float $ratio = null) => BlurHash::encode($this, $ratio),
-    'bh' => fn (float $ratio = null) => $this->blurhash($ratio),
-    'blurhashUri' => fn (float $ratio = null) => BlurHash::blur($this, $ratio),
-    'bhUri' => fn (float $ratio = null) => $this->blurhashUri($ratio),
-    'blurhashColor' => fn (float $ratio = null) => BlurHash::averageColor($this, $ratio),
-    'bhColor' => fn (float $ratio = null) => $this->blurhashColor($ratio),
+    /** @kql-allowed */
+    'blurhash' => fn (float|null $ratio = null) => BlurHash::encode($this, $ratio),
+    /** @kql-allowed */
+    'bh' => fn (float|null $ratio = null) => $this->blurhash($ratio),
+    /** @kql-allowed */
+    'blurhashUri' => fn (float|null $ratio = null) => BlurHash::blur($this, $ratio),
+    /** @kql-allowed */
+    'bhUri' => fn (float|null $ratio = null) => $this->blurhashUri($ratio),
+    /** @kql-allowed */
+    'blurhashColor' => fn (float|null $ratio = null) => BlurHash::averageColor($this, $ratio),
+    /** @kql-allowed */
+    'bhColor' => fn (float|null $ratio = null) => $this->blurhashColor($ratio),
   ],
   'options' => [
     'cache.encode' => true,
