@@ -9,6 +9,8 @@ This plugin adds BlurHash support to Kirby 3, allowing you to implement UX impro
 
 Under the hood, the heavy work gets done by a PHP implementation of BlurHash by [kornrunner](https://github.com/kornrunner): [kornrunner/php-blurhash](https://github.com/kornrunner/php-blurhash)
 
+Be aware that BlurHash currently has [no support for transparency](https://github.com/woltapp/blurhash/issues/100), so it will be rendered in black.
+
 ## Requirements
 
 - Kirby 3.8+
