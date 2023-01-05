@@ -102,7 +102,7 @@ This is especially useful when you only have a few images on your site or don't 
 <img src="<?= $image->blurhashUri() ?>" />
 ```
 
-With an lazy-loading library like [vanilla-lazyload (supports everything)](https://github.com/verlok/vanilla-lazyload) or [Loadeer.js (smaller/faster, doesn't support `<picture>` tag)](https://github.com/johannschopplich/loadeer), your implementation could look like this:
+With an lazy-loading library like [vanilla-lazyload (supports everything)](https://github.com/verlok/vanilla-lazyload) or [Loadeer.js (smaller/faster, doesn't support iframes, videos or background images)](https://github.com/johannschopplich/loadeer), your implementation could look like this:
 
 ```php
 <img
