@@ -7,6 +7,10 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'Composer\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',
+    'Kirby\\ComposerInstaller\\CmsInstaller' => $vendorDir . '/getkirby/composer-installer/src/ComposerInstaller/CmsInstaller.php',
+    'Kirby\\ComposerInstaller\\Installer' => $vendorDir . '/getkirby/composer-installer/src/ComposerInstaller/Installer.php',
+    'Kirby\\ComposerInstaller\\Plugin' => $vendorDir . '/getkirby/composer-installer/src/ComposerInstaller/Plugin.php',
+    'Kirby\\ComposerInstaller\\PluginInstaller' => $vendorDir . '/getkirby/composer-installer/src/ComposerInstaller/PluginInstaller.php',
     'kornrunner\\Blurhash\\AC' => $vendorDir . '/kornrunner/blurhash/src/AC.php',
     'kornrunner\\Blurhash\\Base83' => $vendorDir . '/kornrunner/blurhash/src/Base83.php',
     'kornrunner\\Blurhash\\Blurhash' => $vendorDir . '/kornrunner/blurhash/src/Blurhash.php',

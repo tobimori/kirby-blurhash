@@ -15,6 +15,10 @@ class ComposerStaticInitdffd8c9e0a563d9c7e328275c53882db
         array (
             'kornrunner\\Blurhash\\' => 20,
         ),
+        'K' => 
+        array (
+            'Kirby\\' => 6,
+        ),
     );
 
     public static $prefixDirsPsr4 = array (
@@ -26,10 +30,18 @@ class ComposerStaticInitdffd8c9e0a563d9c7e328275c53882db
         array (
             0 => __DIR__ . '/..' . '/kornrunner/blurhash/src',
         ),
+        'Kirby\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/getkirby/composer-installer/src',
+        ),
     );
 
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
+        'Kirby\\ComposerInstaller\\CmsInstaller' => __DIR__ . '/..' . '/getkirby/composer-installer/src/ComposerInstaller/CmsInstaller.php',
+        'Kirby\\ComposerInstaller\\Installer' => __DIR__ . '/..' . '/getkirby/composer-installer/src/ComposerInstaller/Installer.php',
+        'Kirby\\ComposerInstaller\\Plugin' => __DIR__ . '/..' . '/getkirby/composer-installer/src/ComposerInstaller/Plugin.php',
+        'Kirby\\ComposerInstaller\\PluginInstaller' => __DIR__ . '/..' . '/getkirby/composer-installer/src/ComposerInstaller/PluginInstaller.php',
         'kornrunner\\Blurhash\\AC' => __DIR__ . '/..' . '/kornrunner/blurhash/src/AC.php',
         'kornrunner\\Blurhash\\Base83' => __DIR__ . '/..' . '/kornrunner/blurhash/src/Base83.php',
         'kornrunner\\Blurhash\\Blurhash' => __DIR__ . '/..' . '/kornrunner/blurhash/src/Blurhash.php',
