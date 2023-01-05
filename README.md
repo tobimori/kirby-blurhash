@@ -35,7 +35,58 @@ The default implementation of BlurHash expects the string to be decoded on the c
 
 This provides the most benefits, most notably including better color representation and smaller payload size, but requires the initial execution of such a library on the client-side, and thus is better used with a headless site, a site that features many, high quality images or heavily makes use of client-side infinite scrolling/loading.
 
-// TODO
+#### **`$file->blurhash()` encodes the image with BlurHash and returns it as a string**
+
+An example implementation generating a placeholder image using the BlurHash string could look like this:
+
+```php
+<div
+  data-blurhash="<?= $image->blurhash() ?>" // BlurHash string as attribute, to access via JS
+  style="aspect-ratio: <?= $image->ratio() ?>;"> // Aspect ratio is required as canvas is absolutely positioned
+</div>
+```
+
+```js
+import { decodeBlurHash } from 'fast-blurhash' // https://github.com/mad-gooze/fast-blurhash
+
+const el = document.querySelector('div[data-blurhash]')
+if (!el) return
+
+const { blurhash } = el.dataset
+if (!blurhash) return
+
+const pixels = decodeBlurHash(blurhash, 32, 32)
+
+const canvas = document.createElement('canvas')
+canvas.width = 32
+canvas.height = 32
+
+const ctx = canvas.getContext('2d')
+if (!ctx) return
+const imageData = ctx.createImageData(32, 32)
+imageData.data.set(pixels)
+ctx.putImageData(imageData, 0, 0)
+el.appendChild(canvas)
+```
+
+```css
+div {
+  position: relative;
+  width: 400px;
+}
+
+canvas {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+}
+```
+
+Details will vary in your implementation, as this e.g. does not feature lazy-loading capabilities, or you might want to use a different library, but the general idea is to use the BlurHash string as an attribute on an element, and then decode the BlurHash string on the client-side.
 
 ### Server-side decoding
 
@@ -43,11 +94,66 @@ In addition to simply outputting the BlurHash string for usage on the client-sid
 
 This is especially useful when you only have a few images on your site or don't want to go through the hassle of using a client-side library for outputting placeholders. Using this approach, you'll still get better color representation of the BlurHash algorithm than with regularly downsizing an image, but image previews will still be about ~1kB large.
 
-// TODO
+#### **`$file->blurhashUri()` encodes the image with BlurHash, decodes & rasterizes it, finally returns it as a data URI which can be used inline in a `src` attribute.**
+
+```php
+<img src="<?= $image->blurhashUri() ?>" />
+```
+
+With an lazy-loading library like [vanilla-lazyload (supports everything)](https://github.com/verlok/vanilla-lazyload) or [Loadeer.js (smaller/faster, doesn't support `<picture>` tag)](https://github.com/johannschopplich/loadeer), your implementation could look like this:
+
+```php
+<img
+  src="<?= $image->blurhashUri() ?>"
+  data-src="<?= $image->url() ?>" // Original src attribute that will be replaced by the lazy-loading library
+  data-lazyload // Attribute for browser to know what to lazy-load
+  alt="<?= $image->alt() ?>"
+/>
+```
+
+```js
+import LazyLoad from 'vanilla-lazyload'
+
+const lazy = new LazyLoad({ elements_selector: '[data-lazyload]' })
+```
+
+### Cropped images
+
+Kirby doesn't support file methods on cropped images, so you'll have to use the original image, and pass the ratio as attribute to the element to get the correct BlurHash.
+
+```php
+<?php $cropped = $original->crop(500, 400) ?>
+<img
+  src="<?= $original->blurhashUri(5/4) ?>"
+  data-src="<?= $cropped->url() ?>"
+  data-lazyload
+  alt="<?= $original->alt() ?>"
+/>
+```
+
+This is also supported by `$file->blurhash($ratio)`.
 
 ## Options
 
-// TODO
+| Option             | Default | Description                                                                    |
+| ------------------ | ------- | ------------------------------------------------------------------------------ |
+| `cache.decode`     | `true`  | Enable decoding cache                                                          |
+| `cache.encode`     | `true`  | Enable encoding cache                                                          |
+| `sampleMaxSize`    | `100`   | Max width or height for smaller image that gets encoded (watch out for memory) |
+| `componentsTarget` | `12`    | Max number of components ("blur points") for encoding (x \* y <= ~x)           |
+| `decodeTarget`     | `100`   | Pixel Target (width \* height = ~P) for decoding                               |
+
+Options allow you to fine tune the behaviour of the plugin. You can set them in your `config.php` file:
+
+```php
+return [
+    'tobimori.blurhash' => [
+        'sampleMaxSize' => 200,
+        'componentsTarget' => 12,
+        'decodeTarget' => 100,
+    ],
+];
+```
 
 ## Comparison
 
@@ -57,7 +163,7 @@ This is especially useful when you only have a few images on your site or don't 
 
 ## Credits
 
-- Johann Schopplich's [Kirby Blurry Placeholder](https://github.com/johannschopplich/kirby-blurry-placeholder) plugin that set the baseline for this plugin (especially for rasterized BlurHashes)
+- Johann Schopplich's [Kirby Blurry Placeholder](https://github.com/johannschopplich/kirby-blurry-placeholder) plugin that set the baseline for this plugin (Licensed under [MIT License](https://github.com/johannschopplich/kirby-blurry-placeholder/blob/main/LICENSE) - Copyright © 2020-2022 Johann Schopplich)
 
 ## License
 

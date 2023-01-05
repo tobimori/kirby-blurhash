@@ -1,7 +1,7 @@
 <?php return array(
     'root' => array(
         'name' => 'tobimori/kirby-blurhash',
-        'pretty_version' => '1.0.0+no-version-set',
+        'pretty_version' => '1.0.0',
         'version' => '1.0.0.0',
         'reference' => NULL,
         'type' => 'kirby-plugin',
@@ -20,7 +20,7 @@
             'dev_requirement' => false,
         ),
         'tobimori/kirby-blurhash' => array(
-            'pretty_version' => '1.0.0+no-version-set',
+            'pretty_version' => '1.0.0',
             'version' => '1.0.0.0',
             'reference' => NULL,
             'type' => 'kirby-plugin',

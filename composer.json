@@ -2,6 +2,7 @@
   "name": "tobimori/kirby-blurhash",
   "description": "Image placeholders with the optimized BlurHash integration",
   "type": "kirby-plugin",
+  "version": "1.0.0",
   "license": "MIT",
   "authors": [
     {

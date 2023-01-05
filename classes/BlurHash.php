@@ -7,24 +7,38 @@ use kornrunner\Blurhash\Blurhash as BHEncoder;
 
 class BlurHash
 {
-  public static function blurhash(File $file): string
+  /**
+   * Blurs an image based on the blurhash algorithm, returns a data URI with an SVG filter.
+   * 
+   * @param File $file 
+   * @param float|null $ratio 
+   * @return string 
+   */
+  public static function blur(File $file, float $ratio = null): string
   {
-    $blurhash = self::encode($file);
+    $ratio = ($ratio ?? $file->ratio());
 
-    $pixelTarget = 100;
-    // Aims for an image of ~P pixels (w * h = ~P)
-    $height = round(sqrt($pixelTarget / ($ratio ?? $file->ratio())));
-    $width = round($pixelTarget / $height);
+    $blurhash = self::encode($file, $ratio); // Encode image with BlurHash Algorithm
+    [$width, $height] = self::calcWidthHeight(option('tobimori.blurhash.decodeTarget'), $ratio); // Get target width and height for decoding
+    $image = self::decode($blurhash, $width, $height); // Decode BlurHash to image
 
-    $image = self::decode($blurhash, $width, $height);
-
-    return self::uri($image, $width, $height);
+    return self::uri($image, $width, $height); // Output image as data URI with SVG blur
   }
 
-  public static function encode(File $file): string
+  /**
+   * Returns the blurhash for a Kirby file object.
+   * 
+   * @param File $file 
+   * @param float|null $ratio 
+   * @return string 
+   */
+  public static function encode(File $file, float $ratio = null): string
   {
-    $id = $file->uuid() ?? $file->id();
     $kirby = kirby();
+
+    $id = $file->uuid() ?? $file->id();
+    $ratio = $ratio ?? $file->ratio();
+
     $cache = $kirby->cache('tobimori.blurhash.encode');
 
     if (($cacheData = $cache->get($id)) !== null) {
@@ -32,10 +46,10 @@ class BlurHash
     }
 
     // Generate a sample image for encode to avoid memory issues.
-    $max = 400; // Max width or height
+    $max = $kirby->option('tobimori.blurhash.sampleMaxSize'); // Max width or height
 
-    $height = round($file->height() > $file->width() ? $max : $max * $file->ratio());
-    $width = round($file->width() > $file->height() ? $max : $max * $file->ratio());
+    $height = round($file->height() > $file->width() ? $max : $max * $ratio);
+    $width = round($file->width() > $file->height() ? $max : $max * $ratio);
     $options = [
       'width' => $width,
       'height' => $height,
@@ -64,20 +78,37 @@ class BlurHash
       $pixels[] = $row;
     }
 
-    $blurhash = BHEncoder::encode($pixels, 4, 7);
+    [$x, $y] = self::calcWidthHeight($kirby->option('tobimori.blurhash.componentsTarget'), $ratio);
+    $blurhash = BHEncoder::encode($pixels, $x, $y);
     $cache->set($id, $blurhash);
 
     return $blurhash;
   }
 
+  /**
+   * Decodes a BlurHash string to a binary image string.
+   * 
+   * @param string $blurhash 
+   * @param int $width 
+   * @param int $height 
+   * @return string 
+   */
   public static function decode(string $blurhash, int $width, int $height): string
   {
+    $kirby = kirby();
+    $cache = $kirby->cache('tobimori.blurhash.decode');
+    $id = $blurhash . $width . $height;
+
+    if (($cacheData = $cache->get($id)) !== null) {
+      return $cacheData;
+    }
+
     $pixels = BHEncoder::decode($blurhash, $width, $height);
     $image = imagecreatetruecolor($width, $height);
 
     foreach ($pixels as $y => $row) {
-      foreach ($row as $x => $pixel) {
-        imagesetpixel($image, $x, $y, imagecolorallocate($image, $pixel[0], $pixel[1], $pixel[2]));
+      foreach ($row as $x => [$r, $g, $b]) {
+        imagesetpixel($image, $x, $y, imagecolorallocate($image, $r, $g, $b));
       }
     }
 
@@ -86,11 +117,16 @@ class BlurHash
     $data = ob_get_contents();
     ob_end_clean();
 
+    $cache->set($id, $data);
     return $data;
   }
 
   /**
-   * Returns the URI-encoded string of an SVG
+   * Returns an optimized URI-encoded string of an SVG for using in a src attribute.
+   * Based on https://github.com/johannschopplich/kirby-blurry-placeholder/blob/main/BlurryPlaceholder.php#L65
+   * 
+   * @param string $data
+   * @return string
    */
   private static function svgToUri(string $data): string
   {
@@ -109,10 +145,19 @@ class BlurHash
       $data
     );
 
-    return $data;
+    return 'data:image/svg+xml;charset=utf-8,' . $data;
   }
 
-  private static function uri(string $image, int $width, int $height)
+  /**
+   * Applies SVG filter and base64-encoding to binary image.
+   * Based on https://github.com/johannschopplich/kirby-blurry-placeholder/blob/main/BlurryPlaceholder.php#L10
+   * 
+   * @param string $image
+   * @param int $width
+   * @param int $height
+   * @return string
+   */
+  private static function svgFilter(string $image, int $width, int $height): string
   {
     $uri = 'data:image/png;base64,' . base64_encode($image);
 
@@ -122,16 +167,48 @@ class BlurHash
     // Wrap the blurred image in a SVG to avoid rasterizing the filter
     $svg = <<<EOD
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {$svgWidth} {$svgHeight}">
-          <filter id="b" color-interpolation-filters="sRGB">
+          <filter id="a" color-interpolation-filters="sRGB">
             <feGaussianBlur stdDeviation=".2"></feGaussianBlur>
             <feComponentTransfer>
               <feFuncA type="discrete" tableValues="1 1"></feFuncA>
             </feComponentTransfer>
           </filter>
-          <image filter="url(#b)" x="0" y="0" width="100%" height="100%" href="{$uri}"></image>
+          <image filter="url(#a)" x="0" y="0" width="100%" height="100%" href="{$uri}"></image>
         </svg>
         EOD;
 
-    return 'data:image/svg+xml;charset=utf-8,' . static::svgToUri($svg);
+    return $svg;
+  }
+
+  /**
+   * Returns a decoded BlurHash as a URI-encoded SVG with blur filter applied.
+   * 
+   * @param string $image
+   * @param int $width
+   * @param int $height
+   * @return string
+   */
+  public static function uri(string $image, int $width, int $height): string
+  {
+    $svg = self::svgFilter($image, $width, $height);
+    $uri = self::svgToUri($svg);
+
+    return $uri;
+  }
+
+  /**
+   * Returns the width and height for a given ratio, based on a target entity count.    
+   * Aims for a size of ~x entities (width * height = ~x)
+   * 
+   * @param int $target
+   * @param float $ratio
+   * @return array
+   */
+  private static function calcWidthHeight(int $target, float $ratio): array
+  {
+    $height = round(sqrt($target / $ratio));
+    $width = round($target / $height);
+
+    return [$width, $height];
   }
 }
