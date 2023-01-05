@@ -170,7 +170,7 @@ class BlurHash
   }
 
   /**
-   * Returns the width and height for a given ratio, based on a target entity count.    
+   * Returns the width and height for a given ratio, based on a target entity count.
    * Aims for a size of ~x entities (width * height = ~x)
    */
   private static function calcWidthHeight(int $target, float $ratio): array
