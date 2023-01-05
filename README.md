@@ -33,11 +33,13 @@ composer require tobimori/kirby-blurhash
 
 ### Client-side decoding
 
+#### **`$file->blurhash()`**
+
+> Encodes the image with BlurHash and returns BlurHash as a string
+
 The default implementation of BlurHash expects the string to be decoded on the client-side, using a library like [Wolt's blurhash](https://github.com/woltapp/blurhash/tree/master/TypeScript) or [fast-blurhash](https://github.com/mad-gooze/fast-blurhash).
 
-This provides the most benefits, most notably including better color representation and smaller payload size, but requires the initial execution of such a library on the client-side, and thus is better used with a headless site, a site that features many, high quality images or heavily makes use of client-side infinite scrolling/loading.
-
-#### **`$file->blurhash()` encodes the image with BlurHash and returns it as a string**
+This provides the most benefits, most notably including better color representation and smaller payload size, but requires the initial execution of such a library on the client-side, and thus is better used with a headless site or heavily makes use of client-side infinite scrolling/loading.
 
 An example implementation generating a placeholder image using the BlurHash string could look like this:
 
@@ -90,13 +92,43 @@ canvas {
 
 Details will vary in your implementation, as this e.g. does not feature lazy-loading capabilities, or you might want to use a different library, but the general idea is to use the BlurHash string as an attribute on an element, and then decode the BlurHash string on the client-side.
 
+### Average color
+
+#### **`$file->blurhashColor()`**
+
+> Encodes the image with BlurHash and returns the average color as a hex string
+
+In order to still provide a small placeholder before a client-side library gets loaded, BlurHash also encodes the average color of an image which we can access and use to enhance lazy-loading when no scripts have been loaded yet.
+
+We can update the snippet above like this:
+
+```php
+<div
+  data-blurhash="<?= $image->blurhash() ?>"
+  style="aspect-ratio: <?= $image->ratio() ?>; background-color: <?= $image->blurhashColor() ?>;">
+</div>
+```
+
+When you want to get the average color, but already have a BlurHash generated, you can use the `averageColor` static method on the `BlurHash` class instead:
+
+```php
+<?php
+
+use tobimori\BlurHash;
+
+$blurhash = 'LKN]Rv%2Tw=w]~RBVZRi};RPxuwH';
+echo BlurHash::averageColor($blurhash); // #d0b1a3
+```
+
 ### Server-side decoding
+
+#### **`$file->blurhashUri()`**
+
+> Encodes the image with BlurHash, then decodes & rasterizes it. Finally returns it as a data URI which can be used without any client-side library.
 
 In addition to simply outputting the BlurHash string for usage on the client-side, this plugin also provides a server-side decoding option that allows you to output a base64-encoded image string, which can be used as a placeholder image without any client-side libraries, similar to [Kirby Blurry Placeholder](https://github.com/johannschopplich/kirby-blurry-placeholder).
 
 This is especially useful when you only have a few images on your site or don't want to go through the hassle of using a client-side library for outputting placeholders. Using this approach, you'll still get better color representation of the BlurHash algorithm than with regularly downsizing an image, but image previews will still be about ~1kB large.
-
-#### **`$file->blurhashUri()` encodes the image with BlurHash, decodes & rasterizes it, finally returns it as a data URI which can be used inline in a `src` attribute.**
 
 ```php
 <img src="<?= $image->blurhashUri() ?>" />
@@ -133,7 +165,29 @@ Kirby doesn't support file methods on cropped images, so you'll have to use the 
 />
 ```
 
-This is also supported by `$file->blurhash($ratio)`.
+This is also supported by `$file->blurhash($ratio)` and `$file->blurhashColor($ratio)`.
+
+### Aliases
+
+```php
+$file->bh(); // blurhash()
+$file->bhUri(); // blurhashUri()
+$file->bhColor(); // blurhashColor()
+```
+
+### Clear cache
+
+The encoding cache is automatically cleared when an image gets replaced or updated, however you can also clear the cache manually with the `clearCache` static method:
+
+```php
+<?php
+
+use tobimori\BlurHash;
+
+BlurHash::clearCache($file);
+```
+
+This might be helpful when you use third party plugins to edit your images, and they do not trigger Kirby's internal file update hooks but instead have their own.
 
 ## Options
 

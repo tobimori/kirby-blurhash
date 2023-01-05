@@ -3,6 +3,8 @@
 namespace tobimori;
 
 use Kirby\Cms\File;
+use Kirby\Exception\InvalidArgumentException;
+use kornrunner\Blurhash\Base83;
 use kornrunner\Blurhash\Blurhash as BHEncoder;
 
 class BlurHash
@@ -105,6 +107,59 @@ class BlurHash
 
     $cache->set($id, $data);
     return $data;
+  }
+
+  /**
+   * Get the average color from a BlurHash or a Kirby file based on BlurHash algorithm.
+   */
+  public static function averageColor(File|string $data, float $ratio = null, string $fallback = ''): string
+  {
+    if ($data instanceof File) {
+      $data = self::encode($data, $ratio);
+    } else {
+      if (!self::validate($data)) return $fallback;
+    }
+
+    $avgColor = substr($data, 2, 4);
+    $rgb = Base83::decode($avgColor);
+    $hex = '#' . dechex($rgb);
+
+    return $hex;
+  }
+
+  /**
+   * Validates if a BlurHash string is valid.
+   * Based on https://github.com/kornrunner/php-blurhash/blob/main/src/Blurhash.php#L86
+   */
+  private static function validate(string $blurhash, bool $error = false): bool
+  {
+    if (empty($blurhash) || strlen($blurhash) < 6) {
+      $error && throw new InvalidArgumentException("BlurHash string must be at least 6 characters");
+      return false;
+    }
+
+    $size_info = Base83::decode($blurhash[0]);
+    $sizeY = intdiv($size_info, 9) + 1;
+    $sizeX = ($size_info % 9) + 1;
+
+    $length = strlen($blurhash);
+    $expected = (int) (4 + (2 * $sizeY * $sizeX));
+    if ($length !== $expected) {
+      $error && throw new InvalidArgumentException("BlurHash length mismatch: length is {$length} but it should be {$expected}");
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Clears encoding cache for a file.
+   */
+  public static function clearCache(File $data)
+  {
+    $cache = kirby()->cache('tobimori.blurhash.encode');
+    $id = $data->uuid() ?? $data->id();
+    $cache->remove($id);
   }
 
   /**
