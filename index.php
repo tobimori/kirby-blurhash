@@ -11,7 +11,7 @@ App::plugin('tobimori/blurhash', [
     'bh' => fn (float $ratio = null) => $this->blurhash($ratio),
     'blurhashUri' => fn (float $ratio = null) => BlurHash::blur($this, $ratio),
     'bhUri' => fn (float $ratio = null) => $this->blurhashUri($ratio),
-    'blurhashColor' => fn (float $ratio = null) => BlurHash::averageColor('UKN]Rv%2Tw=w]~RBVZRi};RPxuwHtLOtxZ%g', $ratio),
+    'blurhashColor' => fn (float $ratio = null) => BlurHash::averageColor($this, $ratio),
     'bhColor' => fn (float $ratio = null) => $this->blurhashColor($ratio),
   ],
   'options' => [
