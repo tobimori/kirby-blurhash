@@ -242,9 +242,10 @@ class BlurHash
    */
   private static function getId(Asset|File $file): string
   {
-    if($file instanceof Asset)
+    if ($file instanceof Asset) {
       return $file->mediaHash();
+    }
 
-    return $file->uuid() ?? $file->id();
+    return $file->uuid()->id() ?? $file->id();
   }
 }
