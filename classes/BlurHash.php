@@ -4,6 +4,7 @@ namespace tobimori;
 
 use Kirby\Cms\File;
 use Kirby\Exception\InvalidArgumentException;
+use Kirby\Filesystem\Asset;
 use kornrunner\Blurhash\Base83;
 use kornrunner\Blurhash\Blurhash as BHEncoder;
 
@@ -12,7 +13,7 @@ class BlurHash
   /**
    * Blurs an image based on the BlurHash algorithm, returns a data URI with an SVG filter.
    */
-  public static function blur(File $file, float|null $ratio = null): string
+  public static function blur(Asset|File $file, float|null $ratio = null): string
   {
     $ratio ??= $file->ratio();
 
@@ -26,11 +27,11 @@ class BlurHash
   /**
    * Returns the BlurHash for a Kirby file object.
    */
-  public static function encode(File $file, float|null $ratio = null): string
+  public static function encode(Asset|File $file, float|null $ratio = null): string
   {
     $kirby = kirby();
 
-    $id = $file->uuid() ?? $file->id();
+    $id = self::getId($file);
     $ratio ??= $file->ratio();
     $cache = $kirby->cache('tobimori.blurhash.encode');
 
@@ -112,9 +113,9 @@ class BlurHash
   /**
    * Get the average color from a BlurHash or a Kirby file based on BlurHash algorithm.
    */
-  public static function averageColor(File|string $data, float $ratio = null, string $fallback = ''): string
+  public static function averageColor(Asset|File|string $data, float $ratio = null, string $fallback = ''): string
   {
-    if ($data instanceof File) {
+    if ($data instanceof File || $data instanceof Asset) {
       $data = self::encode($data, $ratio);
     } else {
       if (!self::validate($data)) return $fallback;
@@ -155,10 +156,10 @@ class BlurHash
   /**
    * Clears encoding cache for a file.
    */
-  public static function clearCache(File $data)
+  public static function clearCache(Asset|File $file)
   {
     $cache = kirby()->cache('tobimori.blurhash.encode');
-    $id = $data->uuid() ?? $data->id();
+    $id = self::getId($file);
     $cache->remove($id);
   }
 
@@ -234,5 +235,16 @@ class BlurHash
     $width = round($target / $height);
 
     return [$width, $height];
+  }
+
+  /**
+   * Returns the uuid for a File, or its mediaHash for Assets.
+   */
+  private static function getId(Asset|File $file): string
+  {
+    if($file instanceof Asset)
+      return $file->mediaHash();
+
+    return $file->uuid() ?? $file->id();
   }
 }
