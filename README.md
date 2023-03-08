@@ -13,7 +13,7 @@ Be aware that BlurHash currently has [no support for transparency](https://githu
 
 ## Requirements
 
-- Kirby 3.8+
+- Kirby 3.9.2+ for asset methods
 - PHP 8.0+
 - `gd` extension [(required by Kirby)](https://getkirby.com/docs/guide/quickstart#requirements)
 
@@ -166,6 +166,18 @@ Kirby doesn't support file methods on cropped images, so you'll have to use the 
 ```
 
 This is also supported by `$file->blurhash($ratio)` and `$file->blurhashColor($ratio)`.
+
+### Working with static assets (using `asset()` helper)
+
+All methods are available as asset methods since Kirby 3.9.2 and `kirby-blurhash` v1.2.0.
+
+```php
+asset('assets/image.jpg')->blurhash();
+asset('assets/image.jpg')->blurhashUri();
+asset('assets/image.jpg')->blurhashColor();
+```
+
+[Read more about the `asset()` helper here](https://getkirby.com/docs/reference/objects/filesystem/asset).
 
 ### Aliases
 
