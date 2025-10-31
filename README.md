@@ -1,3 +1,5 @@
+> This plugin is unmaintained. Please use [Kirby ThumbHash](https://github.com/tobimori/kirby-thumbhash) instead.
+
 ![Kirby BlurHash Banner](./.github/banner.png)
 
 # Kirby BlurHash
